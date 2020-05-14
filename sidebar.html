@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <?!=HtmlService.createHtmlOutputFromFile('styles.css').getContent(); ?>
+  </head>
+  <body>
+    <div class="sidebar">
+      <div class="directions hello-contain">
+        <i>This tool imports contact information based on email addresses already in the spreadsheet.  Overwriting columns linked to a form is not recommended. 
+        If you need to insert a column, do so before importing and press 'Reset' at the bottom of this pane.<br/><br/></i>
+        Signed in as <b><?= user.email ?></b>.
+      </div>
+      <hr/>
+      <form>
+        <div class="mode-selector-contain">
+          <div class="selector-header">Import From</div>
+          <div class="dropdown-contain" id="mode-select-contain">
+              <select class="dropdown mode-select" id="mode-select" name="mode-select" <? if(!user.hasDirAccess) { ?> disabled <? } ?> >  <!-- Disable if NO directory access -->
+                <option value="directory">Directory (<?= user.hd ?>)</option>  <!-- Default to 'Directory only' if directory access -->
+                <option value="contacts" <? if(!user.hasDirAccess) { ?> selected <? } ?> >Contacts </option>  <!-- Set to 'Contacts only' if NO directory access -->
+              </select>
+          </div>
+          <div class="directions" id="import-directions">
+            <? if(!user.hd) { ?> The directory service is not available for personal accounts.
+            <? } else if(!user.hasDirAccess) { ?> Your <b><?= user.hd ?></b> account does not have directory access.
+            <? } ?>
+          </div>
+        </div>
+        <div class="selector-header">Email Address Column</div>
+        <div class="dropdown-contain" id="email-select-contain">
+          <select class="dropdown email-select" name="email-select">
+            <option selected disabled value=""><?=menuDefault?></option>
+            <? for (var c = 1; c <= lastColumn; c++) {
+              var a1Not = SpreadsheetApp.getActiveSheet().getRange(1, c).getA1Notation();
+              var cLetter = new RegExp("([A-Z]+)[0-9]+").exec(a1Not)[1]; ?>
+              <option value="<?=c?>">Column <?=cLetter?></option>
+            <? } ?>
+          </select>
+        </div>
+        <div class="selector-header">Field to Import</div>
+        <div class="dropdown-contain" id="field-select-contain">
+          <select class="dropdown field-select" name="field-select">
+            <option selected disabled value=""><?=menuDefault?></option>
+            <? Object.keys(fields).forEach(function(fieldAbbr) { ?>
+              <option value="<?=fieldAbbr?>"><?=fields[fieldAbbr].dispName?></option>
+            <? }); ?>
+          </select>
+        </div>
+        <div class="selector-header">Destination Column</div>
+        <div class="dropdown-contain" id="dest-select-contain">
+          <select class="dropdown dest-select" name="dest-select">
+            <option selected disabled value=""><?=menuDefault?></option>
+            <? for (var c = 1; c <= lastColumn + 1; c++) {
+              var a1Not = SpreadsheetApp.getActiveSheet().getRange(1, c).getA1Notation();
+              var cLetter = new RegExp("([A-Z]+)[0-9]+").exec(a1Not)[1]; ?>
+              <option value="<?=c?>">Column <?=cLetter?>
+                <? if(c > lastColumn) { ?> (new column)
+                <? } else { ?> (overwrite)
+                <? } ?>
+              </option>
+            <? } ?>
+          </select>
+        </div>
+        
+      <hr/>
+      <!-- Section for import and cancel buttons -->
+      <div id="button-bar">
+        <button class="green" id="run-import" disabled>Import</button>
+        <button id="reset">Reset</button>
+        <button id="cancel">Cancel</button>
+      </div>
+      <div id="status-msg"></div>
+    </form>
+  </div>
+    <script src="//code.jquery.com/jquery-3.4.1.min.js"></script>
+    <? var template = HtmlService.createTemplateFromFile('script.js');
+    template.fields = fields; ?>
+    <?!=template.evaluate().getContent(); ?>
+  </body>
+</html>
+
+
