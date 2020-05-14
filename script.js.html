@@ -1,0 +1,63 @@
+<script>
+$(document).ready(function() {
+  updateImportButton();
+  $('#run-import').click(function() {
+    runImport();
+  }); // Assign click handler to the button.
+  
+  $('#cancel').click(function() {
+    google.script.host.close();
+  }); // Assign click handler to the button.
+  
+  $('#reset').click(function() {
+    $("select, input, button").attr("disabled", true);
+    $("#reset").text("Resetting...");
+    google.script.run.showSidebar();
+  }); // Assign click handler to the button.
+  
+  $('.email-select, .field-select, .dest-select').change(updateImportButton);
+  
+});
+
+
+function getCurrentSelectValue(name) {
+  return $("select[name=" + name + "]").val();
+}
+
+
+function runImport() {
+  this.disabled = true; // disable the Import button when the operation begins (no double clicks)
+  $("select, input, button").attr("disabled", true);
+  $("#run-import").text("Importing...");
+  var mode = getCurrentSelectValue("mode-select");
+  var emailCol = getCurrentSelectValue("email-select");
+  var fieldAbbr = getCurrentSelectValue("field-select");
+  var destCol = getCurrentSelectValue("dest-select");
+  google.script.run.withFailureHandler(function() {
+    $("#run-import").attr('disabled', true).text("Failed");
+    $("#reset").attr('disabled', false).text("Restart");
+    $("#cancel").attr('disabled', false).text("Close");
+    $("#status-msg").text("Import has failed.");
+  }).withSuccessHandler(function() {
+    $("#run-import").attr('disabled', true).text("Imported");
+    $("#reset").attr('disabled', false).text("Restart");
+    $("#cancel").attr('disabled', false).text("Close");
+    $("#status-msg").text("Import is complete.");
+  }).import(mode, emailCol, fieldAbbr, destCol);
+}
+
+
+function updateImportButton() {
+  $("#run-import").attr('disabled', true).text("Loading...");
+  var disabled = false;
+  if(getCurrentSelectValue("field-select") == null ||
+     getCurrentSelectValue("email-select") == null || 
+     getCurrentSelectValue("dest-select") == null) {
+    disabled = true;
+  }
+  $("#run-import").attr("disabled", disabled).text("Import");
+}
+
+
+</script>
+
